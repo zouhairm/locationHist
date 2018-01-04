@@ -1,0 +1,17 @@
+This project is intended to keep track of days spent inside/outside of U.S. for immigration purposes.
+It also keeps track of number of days spent in each country for other statistics.
+
+It relies on location history gathered by Google location services.
+
+How to Install:
+1) Clone this Repo
+2) Run setup.sh (clones countries repo and downloads world boarders)
+
+The countries module depends on GDAL. If you don't have it, you need:
+`sudo apt-get install libgdal-dev` (or `brew install gdal` on OSX)
+`sudo pip install GDAL`
+
+
+How to Use:
+1) Download location history from Google and name LocationHistory.json
+2) Edit file 

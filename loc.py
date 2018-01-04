@@ -1,13 +1,14 @@
 import json
 from datetime import datetime
-from countries import countries
 from tqdm import tqdm
-
 import numpy as np
 
+from countries import countries
+cc = countries.CountryChecker('./countries/TM_WORLD_BORDERS-0.3.shp')
+
+#TODO: provide some command line options to make editing easier
 startdate = datetime.strptime('2013 Mar 14', '%Y %b %d');
 
-cc = countries.CountryChecker('./countries/TM_WORLD_BORDERS-0.3.shp')
 
 def setDate(loc):
 	ts_ms = int(loc['timestampMs']) / 1000
