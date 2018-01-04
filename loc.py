@@ -24,7 +24,7 @@ def setCountry(loc):
 		loc['country'] = '?'
 
 
-print "Reading Data"
+print "Loading location history data"
 with open('LocationHistory.json') as fp:
 	data = json.load(fp)
 	locHist = data['locations']
