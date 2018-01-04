@@ -5,7 +5,8 @@ It relies on location history gathered by Google location services.
 
 How to Install:
 1) Clone this Repo
-2) Run setup.sh (clones countries repo and downloads world boarders)
+2) Install dependencies: GDAL and 
+3) Run setup.sh (clones countries repo and downloads world borders)
 
 The countries module depends on GDAL. If you don't have it, you need:
 `sudo apt-get install libgdal-dev` (or `brew install gdal` on OSX)
