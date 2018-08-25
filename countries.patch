@@ -1,0 +1,49 @@
+diff --git a/__init__.py b/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/countries.py b/countries.py
+index c690d56..9c01d27 100644
+--- a/countries.py
++++ b/countries.py
+@@ -25,7 +25,8 @@ class Country(object):
+     
+     def __str__(self):
+         return self.shape.GetField('NAME')
+-    
++    name = property(__str__)
++
+     def contains(self, point):
+         return self.shape.geometry().Contains(point.ogr)
+ 
+@@ -36,17 +37,26 @@ class CountryChecker(object):
+         driver = ogr.GetDriverByName('ESRI Shapefile')
+         self.countryFile = driver.Open(country_file)
+         self.layer = self.countryFile.GetLayer()
++        self.countryGuess = None
++        self.ogrPoint = ogr.Geometry(ogr.wkbPoint)
+     
+-    def getCountry(self, point):
++    def getCountry(self, lat, lon):
+         """
+         Checks given gps-incoming coordinates for country.
+         Output is either country shape index or None
+         """
+         
+-        for i in xrange(self.layer.GetFeatureCount()):
++        self.ogrPoint.AddPoint(lon, lat) #lon,lat instead of lat,lon
++
++        if self.countryGuess:
++            if self.countryGuess.shape.geometry().Contains(self.ogrPoint):
++                return self.countryGuess
++
++        for i in range(self.layer.GetFeatureCount()):
+             country = self.layer.GetFeature(i)
+-            if country.geometry().Contains(point.ogr):
+-                return Country(country)
++            if country.geometry().Contains(self.ogrPoint):
++                self.countryGuess = Country(country)
++                return self.countryGuess
+         
+         # nothing found
+-        return None
++        return self.countryGuess

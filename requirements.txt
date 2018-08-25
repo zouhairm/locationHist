@@ -1,0 +1,2 @@
+tqdm
+gdal #might require using `brew install gdal` on MacOS
