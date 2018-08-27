@@ -1,7 +1,15 @@
+#!/usr/bin/env python3
+
 import json
 from datetime import datetime, timedelta
 from collections import OrderedDict
 import numpy as np
+import sys
+
+#Logging framework
+import logging
+logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
+log = logging.getLogger('LocHist')
 
 
 #Progress bar
@@ -11,9 +19,26 @@ tqdm.monitor_interval = 0 #per https://github.com/tqdm/tqdm/issues/481
 from countries import countries
 cc = countries.CountryChecker('./countries/TM_WORLD_BORDERS-0.3.shp')
 
-#TODO: provide some command line options to make editing easier
-startdate = datetime.strptime('2013 Mar 14', '%Y %b %d');
 
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option("-s", dest="startdate",
+                     help="Date to start analyzing in Format YYYY-Mo-DD \n Example: 2013-Jan-30")
+parser.add_option("-r", "--resolution", default=6,
+                     help="Resolution of location data in hours (Default is 6hrs)")
+
+parseOpts, args = parser.parse_args()
+
+if parseOpts.startdate == None:
+	log.error('Must provide a start date')
+	parser.print_help()
+	sys.exit(-1)
+
+try:
+	startdate = datetime.strptime(parseOpts.startdate, '%Y-%b-%d');
+except:
+	log.error('Error parsing start date')
+	sys.exit(-1)
 
 def setDate(loc):
 	ts_ms = int(loc['timestampMs']) / 1000
@@ -29,12 +54,12 @@ def setCountry(loc):
 		loc['country'] = '?'
 
 
-print("Loading location history data")
+log.info("Loading location history data")
 with open('LocationHistory.json') as fp:
 	data = json.load(fp)
 	locHist = data['locations']
 
-print("Pruning Data")
+log.info("Pruning Data")
 dayHist = []
 prevDate = datetime.now()
 for loc in tqdm(locHist):
@@ -44,19 +69,18 @@ for loc in tqdm(locHist):
 		break
 
 	dt = prevDate - loc['date']
-	if(dt.seconds/3600 >= 6):
+	#Keep locations in n Hours increments
+	if(dt.seconds/3600 >= parseOpts.resolution):
 		dayHist.append(loc)
 		prevDate = loc['date']
 
 
 
-print("Finding out countries")
+log.info("Looking up countries")
 for loc in tqdm(dayHist):
 	setCountry(loc)
 
-
-
-print("Compressing")
+log.info("Compressing")
 dates     = np.array([x['date'] for x in reversed(dayHist)])
 countries = np.array([x['country'] for x in reversed(dayHist)])
 
@@ -67,18 +91,21 @@ if countries[-1] != 'United States':
 	try:
 		dates = np.append(dates, datetime.strptime(returndate, '%Y %b %d'))
 	except:
-		print('Error interpreting date %s. Using today instead'%returndate)
+		log.warning('Error interpreting date %s. Using today instead'%returndate)
 		dates = np.append(dates, datetime.today())
 	#Need to pad array due to way indexing is done
 	dates     = np.append(dates, [dates[-1]]*2)
 	countries = np.append(countries, [countries[-1]]*2)
 
+#Find unnique countries
 idx = np.where(countries[:-1] != countries[1:])[0]
 idx = np.append(idx, idx[-1]+1)
 D = dates[idx+1]
 DD= dates[idx+2]
 C = countries[idx]
 
+
+#Output all trips
 outFile = open('locHist.csv','w')
 totalDays   = {}
 totalNZDays = {}
@@ -105,12 +132,11 @@ for i in range(len(D)):
 
 	
 outFile.close()
-
 print('Total days outside of US', sum(totalDays.values()))
 
 
 
-
+#Output USCIS format
 nTrips = 0
 nDaysTotal  = 0
 cList = []

@@ -8,8 +8,10 @@ How to Install:
 
 How to Use:
 1) Download location history from Google and name LocationHistory.json
-2) Edit loc.py for start date
-3) outputs locHist.csv with dates in each country, and USCIS.csv with trips outside of the US and countries visited
+2) Run `loc.py -s STARTDATE` with STARTDATE the day from which you want to calculate statistics (`loc.py --help` for more info)
+3) Program will output:
+* locHist.csv with dates in each country, and 
+* USCIS.csv with trips outside of the US and countries visited
 
 
 ==========
