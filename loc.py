@@ -60,6 +60,19 @@ print("Compressing")
 dates     = np.array([x['date'] for x in reversed(dayHist)])
 countries = np.array([x['country'] for x in reversed(dayHist)])
 
+#If currently on trip, ask when expected to return to US
+if countries[-1] != 'United States':
+	countries = np.append(countries, 'United States')
+	returndate = input('Enter date you expect to return to the US: (YYYY MON DD), for example 2018 Jan 10: \n')
+	try:
+		dates = np.append(dates, datetime.strptime(returndate, '%Y %b %d'))
+	except:
+		print('Error interpreting date %s. Using today instead'%returndate)
+		dates = np.append(dates, datetime.today())
+	#Need to pad array due to way indexing is done
+	dates     = np.append(dates, [dates[-1]]*2)
+	countries = np.append(countries, [countries[-1]]*2)
+
 idx = np.where(countries[:-1] != countries[1:])[0]
 idx = np.append(idx, idx[-1]+1)
 D = dates[idx+1]
@@ -98,11 +111,12 @@ print('Total days outside of US', sum(totalDays.values()))
 
 
 
-outFile = open('USCIS.csv','w')
 nTrips = 0
 nDaysTotal  = 0
 cList = []
 DateLeft  = None
+
+outStrings = []
 for i in range(len(D)):
 	c = C[i]
 
@@ -115,8 +129,8 @@ for i in range(len(D)):
 				    Left=DateLeft.strftime('%m/%d/%y'), Return=DateReturn.strftime('%m/%d/%y'),
 				    list = ', '.join(np.unique(cList)), 
 				    daysOut = nDays)
+		outStrings += [outStr]
 		print(outStr)
-		outFile.write(outStr+"\n")
 
 		nDaysTotal += nDays
 		cList = []
@@ -128,7 +142,9 @@ for i in range(len(D)):
 		DateLeft = D[i-1]
 
 	cList += [c]
-	
+
+outFile = open('USCIS.csv','w')
+outFile.write('\n'.join(outStrings[::-1]))
 outFile.close()
 
 print('Total days  outside of US', nDaysTotal)
