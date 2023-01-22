@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 
-import json
-from datetime import datetime, timedelta
 from collections import OrderedDict
+from datetime import datetime, timedelta
+from tqdm import tqdm
+import argparse
+import json
+import logging
 import numpy as np
 import sys
-import argparse
 
-#Logging framework
-import logging
+from countries import countries
+
 logging.basicConfig(format='%(levelname)s: %(message)s',level=logging.INFO)
 log = logging.getLogger('LocHist')
 
 
-#Progress bar
-from tqdm import tqdm
-tqdm.monitor_interval = 0 #per https://github.com/tqdm/tqdm/issues/481
+# Progress bar
+tqdm.monitor_interval = 0 # per https://github.com/tqdm/tqdm/issues/481
 
-from countries import countries
 
 parser = argparse.ArgumentParser(
     description="location miner",
@@ -38,14 +38,15 @@ if args.startdate == None:
 
 
 try:
-    startdate = datetime.strptime(args.startdate, '%Y-%b-%d');
-except:
+    startdate = datetime.fromisoformat(datetime.strptime(args.startdate, '%Y-%b-%d').isoformat() + '+00:00')
+except Exception as e:
     log.error('Error parsing start date')
     sys.exit(-1)
 
+
 def setDate(loc):
-    ts_ms = int(loc['timestampMs']) / 1000
-    loc['date'] = datetime.fromtimestamp(ts_ms)
+    timestamp = loc['timestamp'][:-1] + '+00:00'
+    loc['date'] = datetime.fromisoformat(timestamp)
 
 
 cc = countries.CountryChecker('./countries/TM_WORLD_BORDERS-0.3.shp')
@@ -66,14 +67,17 @@ with open(args.locfile) as fp:
 
 log.info("Pruning Data")
 dayHist = []
-prevDate = datetime.now()
+prevDate = None
 for loc in tqdm(locHist):
     setDate(loc)
 
     if loc['date'] < startdate:
-        break
+        continue
 
-    dt = prevDate - loc['date']
+    if prevDate is None:
+        prevDate = loc['date']
+
+    dt = loc['date'] - prevDate
     #Keep locations in n Hours increments
     if(dt.seconds/3600 >= args.resolution):
         dayHist.append(loc)
@@ -86,18 +90,21 @@ for loc in tqdm(dayHist):
     setCountry(loc)
 
 log.info("Compressing")
-dates     = np.array([x['date'] for x in reversed(dayHist)])
-countries = np.array([x['country'] for x in reversed(dayHist)])
+dates     = np.array([x['date'] for x in (dayHist)])
+countries = np.array([x['country'] for x in (dayHist)])
 
 #If currently on trip, ask when expected to return to US
 if countries[-1] != 'United States':
     countries = np.append(countries, 'United States')
-    returndate = input('Enter date you expect to return to the US: (YYYY MON DD), for example 2018 Jan 10: \n')
+    returndate = input('Enter date you expect to return to the US: (YYYY-MON DD), for example 2018-Jan-10: \n')
     try:
-        dates = np.append(dates, datetime.strptime(returndate, '%Y %b %d'))
+        returndate = datetime.fromisoformat(datetime.strptime(
+            returndate, '%Y-%b-%d').isoformat() + '+00:00')
     except:
         log.warning('Error interpreting date %s. Using today instead'%returndate)
-        dates = np.append(dates, datetime.today())
+        returndate = datetime.fromisoformat(datetime.today().isoformat() + '+00:00')
+
+    dates = np.append(dates, returndate)
     #Need to pad array due to way indexing is done
     dates     = np.append(dates, [dates[-1]]*2)
     countries = np.append(countries, [countries[-1]]*2)
