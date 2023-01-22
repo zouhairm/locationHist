@@ -10,8 +10,8 @@ It relies on location history gathered by Google location services.
 
 # Use
 =====
-1) Download location history from Google and name LocationHistory.json
-2) Run `loc.py -s STARTDATE` with STARTDATE the day from which you want to calculate statistics (`loc.py --help` for more info)
+1) Download location history from Google (we want the Records.json file)
+2) Run `loc.py Records.json -s STARTDATE` with STARTDATE the day from which you want to calculate statistics (`loc.py --help` for more info)
 3) Program will output:
 * locHist.csv with dates in each country, and
 * USCIS.csv with trips outside of the US and countries visited
