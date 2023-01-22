@@ -1,22 +1,23 @@
 This project is intended to keep track of days spent inside/outside of U.S. for immigration purposes.
 It relies on location history gathered by Google location services.
 
-How to Install:
+# Install
+=========
 1) Clone this Repo
-2) Install dependencies: GDAL, tqdm, and numpy (pip3 install -r requirements.txt)
-3) Run setup.sh (clones and patches countries repo and downloads world borders)
+2) Run setup.sh
+    - Note this assumes is running on OSX and that gdal is installed with `brew install gdal`
+    - If on linux, install with `sudo apt-get install libgdal-dev`
 
-How to Use:
+# Use
+=====
 1) Download location history from Google and name LocationHistory.json
 2) Run `loc.py -s STARTDATE` with STARTDATE the day from which you want to calculate statistics (`loc.py --help` for more info)
 3) Program will output:
-* locHist.csv with dates in each country, and 
+* locHist.csv with dates in each country, and
 * USCIS.csv with trips outside of the US and countries visited
 
 
-==========
-Further installation details:
-For GDAL: 
-`sudo apt-get install libgdal-dev` (or `brew install gdal` on OSX)
-`pip install GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}')`
-
+# Note
+======
+Note that this includes files from http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip
+and "countries" from https://github.com/che0/countries.git at commit 74a450c248674a74492bac31caf868f283401494 which unfortunately no longer exists so can't be pulled as a submodule (countries.patch is what was used to patch the repo)

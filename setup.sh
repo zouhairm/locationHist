@@ -1,9 +1,5 @@
 #!/bin/sh
+python3 -c 'import os; assert "VIRTUAL_ENV" in os.environ, "Please run in a virtual env"'
 
-git submodule update --init
-cd countries
-git apply ../countries.patch
-wget http://thematicmapping.org/downloads/TM_WORLD_BORDERS-0.3.zip
-unzip TM_WORLD_BORDERS-0.3.zip
-cd ..
-
+pip3 install GDAL==$(gdal-config --version | awk -F'[.]' '{print $1"."$2}')
+pip3 install -r requirements.txt
